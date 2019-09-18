@@ -13,11 +13,17 @@ class FeatureExtract:
                     '((0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\/)'  #IPv4 in hexadecimal
                     '(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}',url)     #Ipv6
         return -1 if match else 1
-#prepare dataset
+#prepare features
 ip_address=[]
 
 #Extracting features from url
 fe=FeatureExtract()
+nrows=len(raw_data["urls"])
 
-ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
+for i in range(0,nrows):
+    url=raw_data["urls"][i]
+    print(i),print(url)
+    ip_address.append(fe.has_ip_address(url))
+
+#ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 print(ip_address)
