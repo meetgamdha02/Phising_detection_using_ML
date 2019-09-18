@@ -1,14 +1,23 @@
 import re
-from pattern import *
+import pandas as pd
 
-def has_ip_address(url):
-    ip_address_pattern = ipv4_pattern + "|" + ipv6_pattern
-    match = re.search(ip_address_pattern, url)
-    return -1 if match else 1
+#getting raw urls
+raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
 
-#main function which extracts feature from url
-def main(url):
-    ex_feature=[]
-    ex_feature.append(has_ip_address(url))
-    print(ex_feature)
-    return ex_feature
+class FeatureExtract:
+    def __init__(self):
+        pass
+
+    def has_ip_address(self,url):
+        match=re.search('(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\/)|'  #IPv4
+                    '((0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\.(0x[0-9a-fA-F]{1,2})\\/)'  #IPv4 in hexadecimal
+                    '(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}',url)     #Ipv6
+        return -1 if match else 1
+#prepare dataset
+ip_address=[]
+
+#Extracting features from url
+fe=FeatureExtract()
+
+ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
+print(ip_address)
