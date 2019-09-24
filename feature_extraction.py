@@ -8,6 +8,8 @@ from urllib.parse import urlparse,urlencode
 
 #getting raw urls
 raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
+#raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
+
 
 class FeatureExtract:
     def __init__(self):
@@ -48,12 +50,48 @@ class FeatureExtract:
         #implementation 2
         #last_double_slash = url.rfind('//')
         #return -1 if last_double_slash > 6 else 1
+    def prefix_suffix_sep(self,url):
+        if "-" in urlparse(url).netloc:
+            return -1          
+        else:
+            return 1
+    def sub_domain(self,url):
+        thr1=3
+        thr2=4
+        if self.has_ip_address(url) == -1:
+            match = re.search(
+                '(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.'
+                '([01]?\\d\\d?|2[0-4]\\d|25[0-5]))|(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}',
+                url)
+            ps = match.end()
+            url = url[ps:]
+        num_dots = [x.start() for x in re.finditer(r'\.', url)]
+        if len(num_dots) <= thr1:
+            return 1
+        elif len(num_dots) == thr2:
+            return 0
+        else:
+            return -1
+    def shortening_service(self,url):
+        match=re.search(r"bit\.ly|goo\.gl|shorte\.st|go2l\.ink|x\.co|ow\.ly|t\.co|tinyurl|tr\.im|is\.gd|cli\.gs|" \
+                      r"yfrog\.com|migre\.me|ff\.im|tiny\.cc|url4\.eu|twit\.ac|su\.pr|twurl\.nl|snipurl\.com|" \
+                      r"short\.to|BudURL\.com|ping\.fm|post\.ly|Just\.as|bkite\.com|snipr\.com|fic\.kr|loopt\.us|" \
+                      r"doiop\.com|short\.ie|kl\.am|wp\.me|rubyurl\.com|om\.ly|to\.ly|bit\.do|t\.co|lnkd\.in|db\.tt|" \
+                      r"qr\.ae|adf\.ly|goo\.gl|bitly\.com|cur\.lv|tinyurl\.com|ow\.ly|bit\.ly|ity\.im|q\.gs|is\.gd|" \
+                      r"po\.st|bc\.vc|twitthis\.com|u\.to|j\.mp|buzurl\.com|cutt\.us|u\.bb|yourls\.org|x\.co|" \
+                      r"prettylinkpro\.com|scrnch\.me|filoops\.info|vzturl\.com|qr\.net|1url\.com|tweez\.me|v\.gd|" \
+                      r"tr\.im|link\.zip\.net",url)
+        return -1 if match else 1   
 
 #prepare features
 ip_address=[]
 long_url=[]
 have_at_symbol=[]
 redirect=[]
+pre_suf_sep=[]
+sub_domains=[]
+srt_service=[]
+
 #Extracting features from url
 fe=FeatureExtract()
 nrows=len(raw_data["urls"])
@@ -65,10 +103,16 @@ for i in range(0,nrows):
     long_url.append(fe.url_length(url))
     have_at_symbol.append(fe.having_at_symbol(url))
     redirect.append(fe.redirection(url))
+    pre_suf_sep.append(fe.prefix_suffix_sep(url))
+    sub_domains.append(fe.sub_domain(url))
+    srt_service.append(fe.shortening_service(url))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
     print(fe.redirection(url))
+    print(fe.prefix_suffix_sep(url))
+    print(fe.sub_domain(url))
+    print(fe.shortening_service(url))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
