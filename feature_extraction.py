@@ -4,7 +4,9 @@
 import re
 import pandas as pd
 from urllib.parse import urlparse,urlencode
-
+from datetime import datetime
+import whois
+import time
 
 #getting raw urls
 raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
@@ -82,6 +84,37 @@ class FeatureExtract:
                       r"prettylinkpro\.com|scrnch\.me|filoops\.info|vzturl\.com|qr\.net|1url\.com|tweez\.me|v\.gd|" \
                       r"tr\.im|link\.zip\.net",url)
         return -1 if match else 1   
+    def domain_reg_len(self,url):
+        dns = 0
+        try:
+            domain_name = whois.whois(urlparse(url).netloc)
+        except:
+            dns = 1
+        
+        if dns == 1:
+            return -1      #phishing
+        else:
+            expiration_date = domain_name.expiration_date
+            today = time.strftime('%Y-%m-%d')
+            today = datetime.strptime(today, '%Y-%m-%d')
+            if expiration_date is None:
+                return -1
+            elif type(expiration_date) is list or type(today) is list :
+                return 0     #If it is a type of list then we can't select a single value from list. So,it is regarded as suspected website  
+            else:
+                creation_date = domain_name.creation_date
+                expiration_date = domain_name.expiration_date
+                if (isinstance(creation_date,str) or isinstance(expiration_date,str)):
+                    try:
+                        creation_date = datetime.strptime(creation_date,'%Y-%m-%d')
+                        expiration_date = datetime.strptime(expiration_date,"%Y-%m-%d")
+                    except:
+                        return 0
+                registration_length = abs((expiration_date - today).days)
+                if registration_length / 365 <= 1:
+                    return -1 #phishing
+                else:
+                    return 1 # legitimate
 
 #prepare features
 ip_address=[]
@@ -91,6 +124,7 @@ redirect=[]
 pre_suf_sep=[]
 sub_domains=[]
 srt_service=[]
+domain_registration_length=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -106,6 +140,7 @@ for i in range(0,nrows):
     pre_suf_sep.append(fe.prefix_suffix_sep(url))
     sub_domains.append(fe.sub_domain(url))
     srt_service.append(fe.shortening_service(url))
+    domain_registration_length.append(fe.domain_reg_len(url))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -113,6 +148,7 @@ for i in range(0,nrows):
     print(fe.prefix_suffix_sep(url))
     print(fe.sub_domain(url))
     print(fe.shortening_service(url))
+    print(fe.domain_reg_len(url))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
