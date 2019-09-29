@@ -2,11 +2,11 @@ from sklearn import tree
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 #from utils import generate_data_set
-
+import pandas as pd
 import numpy as np
 import sys
 
@@ -23,22 +23,22 @@ def load_data():
     # Extract the outputs from the training data
     outputs = training_data[:, -1]
 
-    # This model follow 80-20 rule on dataset
-    # Split 80% for traning and 20% testing
-    #boundary = int(0.8*len(inputs))
-
-    training_inputs, training_outputs, testing_inputs, testing_outputs = train_test_split(inputs, outputs, test_size=0.2)
-
+    # Split data for traning and testing
+    training_inputs, testing_inputs,training_outputs, testing_outputs = train_test_split(inputs, outputs, test_size=0.3,random_state=110)
+    print("Spilt of data:train_data|| test_data|| train_label|| test_label||")
+    print(len(training_inputs),len(testing_inputs),len(training_outputs),len(testing_outputs))
+    #finding spilt count in legitimate and phising
+    print("Train spilt count")
+    print(pd.value_counts(training_outputs))
+    print("Test spilt count")
+    print(pd.value_counts(testing_outputs))
     # Return the four arrays
     return training_inputs, training_outputs, testing_inputs, testing_outputs
 
-def run(classifier, name):
+def run(classifier, name,train_inputs,train_outputs,test_inputs, test_outputs):
     '''
     Run the classifier to calculate the accuracy score
     '''
-    # Load the training data
-    train_inputs, test_inputs,train_outputs, test_outputs = load_data()
-
     # Train the decision tree classifier
     classifier.fit(train_inputs, train_outputs)
 
@@ -49,59 +49,64 @@ def run(classifier, name):
     accuracy = 100.0 * accuracy_score(test_outputs, predictions)
     print ("Accuracy score using {} is: {}\n".format(name, accuracy))
 
+    #print confusion matrix
+    mt=confusion_matrix(test_outputs, predictions)
+    print(mt)
+
 
 if __name__ == '__main__':
     '''
     Main function -
-    Following are several models trained to detect phishing webstes.
-    Only the best and worst classifier outputs are displayed.
+    Following are several models trained to detect phishing websites.
     '''
 
+    # Load the training data
+    train_inputs,train_outputs,test_inputs, test_outputs = load_data()
     # Decision tree
-    # classifier = tree.DecisionTreeClassifier()
-    # run(classifier, "Decision tree")
+    classifier = tree.DecisionTreeClassifier()
+    run(classifier, "Decision tree",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Random forest classifier (low accuracy)
     # classifier = RandomForestClassifier()
-    # run(classifier, "Random forest")
+    # run(classifier, "Random forest",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom random forest classifier 1
     print ("Best classifier for detecting phishing websites.")
-    classifier = RandomForestClassifier(n_estimators=500, max_depth=15, max_leaf_nodes=10000)
-    run(classifier, "Random forest")
+    classifier = RandomForestClassifier(n_estimators=500, max_depth=20, max_leaf_nodes=20000)
+    run(classifier, "Random forest",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Linear SVC classifier
     # classifier = svm.SVC(kernel='linear')
-    # run(classifier, "SVC with linear kernel")
+    # run(classifier, "SVC with linear kernel",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # RBF SVC classifier
     # classifier = svm.SVC(kernel='rbf')
-    # run(classifier, "SVC with rbf kernel")
+    # run(classifier, "SVC with rbf kernel",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom SVC classifier 1
     # classifier = svm.SVC(decision_function_shape='ovo', kernel='linear')
-    # run(classifier, "SVC with ovo shape")
+    # run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom SVC classifier 2
     # classifier = svm.SVC(decision_function_shape='ovo', kernel='rbf')
-    # run(classifier, "SVC with ovo shape")
+    # run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # NuSVC classifier
     # classifier = svm.NuSVC()
-    # run(classifier, "NuSVC")
+    # run(classifier, "NuSVC",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # OneClassSVM classifier
     print( "Worst classifier for detecting phishing websites.")
     classifier = svm.OneClassSVM(gamma=1.7)
-    run(classifier, "One Class SVM")
+    run(classifier, "One Class SVM",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # print "K nearest neighbours algorithm."
     # nbrs = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
-    # run(nbrs, "K nearest neighbours")
+    # run(nbrs, "K nearest neighbours",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Gradient boosting classifier
     # classifier = GradientBoostingClassifier()
-    # run(classifier, "GradientBoostingClassifier")
+    # run(classifier, "GradientBoostingClassifier",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Take user input and check whether its phishing URL or not.
     if len(sys.argv) > 1:
