@@ -7,10 +7,13 @@ from urllib.parse import urlparse,urlencode
 from datetime import datetime
 import whois
 import time
+import bs4
+import requests
+import urllib
 
 #getting raw urls
-raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
-#raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
+#raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
+raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
 
 
 class FeatureExtract:
@@ -115,6 +118,16 @@ class FeatureExtract:
                     return -1 #phishing
                 else:
                     return 1 # legitimate
+    def favicon(self,url,soup,err):
+        if err:
+            return -1
+        else:
+            domain=urlparse(url).netloc
+            for head in soup.find_all('head'):
+                for head.link in soup.find_all('link', href=True):
+                    dots = [x.start() for x in re.finditer(r'\.', head.link['href'])]
+                    return 1 if url in head.link['href'] or len(dots) == 1 or domain in head.link['href'] else -1
+            return 1
 
 #prepare features
 ip_address=[]
@@ -125,6 +138,7 @@ pre_suf_sep=[]
 sub_domains=[]
 srt_service=[]
 domain_registration_length=[]
+favicon=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -133,6 +147,12 @@ nrows=len(raw_data["urls"])
 for i in range(0,nrows):
     url=raw_data["urls"][i]
     print(i),print(url)
+    notfound=0
+    try:
+        cnt=urllib.request.urlopen(url).read()
+    except:
+        notfound=1
+    soup=bs4.BeautifulSoup(cnt,'html.parser')
     ip_address.append(fe.has_ip_address(url))
     long_url.append(fe.url_length(url))
     have_at_symbol.append(fe.having_at_symbol(url))
@@ -140,7 +160,8 @@ for i in range(0,nrows):
     pre_suf_sep.append(fe.prefix_suffix_sep(url))
     sub_domains.append(fe.sub_domain(url))
     srt_service.append(fe.shortening_service(url))
-    domain_registration_length.append(fe.domain_reg_len(url))
+    #domain_registration_length.append(fe.domain_reg_len(url))
+    favicon.append(fe.favicon(url,soup,notfound))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -148,7 +169,8 @@ for i in range(0,nrows):
     print(fe.prefix_suffix_sep(url))
     print(fe.sub_domain(url))
     print(fe.shortening_service(url))
-    print(fe.domain_reg_len(url))
+    #print(fe.domain_reg_len(url))
+    print(fe.favicon(url,soup,notfound))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
