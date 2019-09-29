@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 #from utils import generate_data_set
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 
 def load_data():
@@ -15,23 +16,29 @@ def load_data():
     Load data from CSV file
     '''
     # Load the training data from the CSV file
-    training_data = np.genfromtxt('dataset/train_dataset.csv', delimiter=',', dtype=np.int32)
-
+    #training_data = np.genfromtxt('dataset/train_dataset.csv', delimiter=',', dtype=np.int32)
+    
     # Extract the inputs from the training data
-    inputs = training_data[:,:-1]
+    #inputs = training_data[:,:-1]
 
     # Extract the outputs from the training data
-    outputs = training_data[:, -1]
+    #outputs = training_data[:, -1]
+
+    training_data = pd.read_csv('dataset/train_dataset.csv')
+    inputs = training_data.iloc[ : , :-1].values
+    outputs = training_data.iloc[:, -1:].values
 
     # Split data for traning and testing
     training_inputs, testing_inputs,training_outputs, testing_outputs = train_test_split(inputs, outputs, test_size=0.3,random_state=110)
     print("Spilt of data:train_data|| test_data|| train_label|| test_label||")
     print(len(training_inputs),len(testing_inputs),len(training_outputs),len(testing_outputs))
     #finding spilt count in legitimate and phising
-    print("Train spilt count")
-    print(pd.value_counts(training_outputs))
-    print("Test spilt count")
-    print(pd.value_counts(testing_outputs))
+    #print("Train spilt count")
+    #print(pd.value_counts(training_outputs))
+    #training_outputs.value_counts()
+    #print("Test spilt count")
+    #print(pd.value_counts(testing_outputs))
+    #testing_outputs.value_counts()
     # Return the four arrays
     return training_inputs, training_outputs, testing_inputs, testing_outputs
 
@@ -74,6 +81,22 @@ if __name__ == '__main__':
     print ("Best classifier for detecting phishing websites.")
     classifier = RandomForestClassifier(n_estimators=500, max_depth=20, max_leaf_nodes=20000)
     run(classifier, "Random forest",train_inputs,train_outputs,test_inputs, test_outputs)
+    #-------------Features Importance random forest
+    training_data = pd.read_csv('dataset/train_dataset.csv')
+    names = training_data.iloc[:,:-1].columns
+    importances =classifier.feature_importances_
+    sorted_importances = sorted(importances, reverse=True)
+    indices = np.argsort(-importances)
+    var_imp = pd.DataFrame(sorted_importances, names[indices], columns=['importance'])
+
+
+
+    #-------------plotting variable importance
+    plt.title("Variable Importances")
+    plt.barh(np.arange(len(names)), sorted_importances, height = 0.7)
+    plt.yticks(np.arange(len(names)), names[indices], fontsize=7)
+    plt.xlabel('Relative Importance')
+    plt.show()
 
     # Linear SVC classifier
     # classifier = svm.SVC(kernel='linear')
