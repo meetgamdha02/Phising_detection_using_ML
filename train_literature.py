@@ -2,7 +2,7 @@ from sklearn import tree
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix,f1_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 #from utils import generate_data_set
@@ -16,28 +16,29 @@ def load_data():
     Load data from CSV file
     '''
     # Load the training data from the CSV file
-    #training_data = np.genfromtxt('dataset/train_dataset.csv', delimiter=',', dtype=np.int32)
+    training_data = np.genfromtxt('dataset/train_dataset.csv', delimiter=',', dtype=np.int32)
     
     # Extract the inputs from the training data
-    #inputs = training_data[:,:-1]
+    inputs = training_data[:,[0,1,5,6,7,8,12,13,14,15,23,24,25,26,27,28]]
+    print(len(inputs[0]))
 
     # Extract the outputs from the training data
-    #outputs = training_data[:, -1]
+    outputs = training_data[:, -1]
 
-    training_data = pd.read_csv('dataset/train_dataset.csv')
-    inputs = training_data.iloc[ : , :-1].values
-    outputs = training_data.iloc[:, -1:].values
+    #training_data = pd.read_csv('dataset/train_dataset.csv')
+    #inputs = training_data.iloc[ : , :-1].values
+    #outputs = training_data.iloc[:, -1:].values
 
     # Split data for traning and testing
     training_inputs, testing_inputs,training_outputs, testing_outputs = train_test_split(inputs, outputs, test_size=0.3,random_state=110)
     print("Spilt of data:train_data|| test_data|| train_label|| test_label||")
     print(len(training_inputs),len(testing_inputs),len(training_outputs),len(testing_outputs))
     #finding spilt count in legitimate and phising
-    #print("Train spilt count")
-    #print(pd.value_counts(training_outputs))
+    print("Train spilt count")
+    print(pd.value_counts(training_outputs))
     #training_outputs.value_counts()
-    #print("Test spilt count")
-    #print(pd.value_counts(testing_outputs))
+    print("Test spilt count")
+    print(pd.value_counts(testing_outputs))
     #testing_outputs.value_counts()
     # Return the four arrays
     return training_inputs, training_outputs, testing_inputs, testing_outputs
@@ -59,6 +60,9 @@ def run(classifier, name,train_inputs,train_outputs,test_inputs, test_outputs):
     #print confusion matrix
     mt=confusion_matrix(test_outputs, predictions)
     print(mt)
+
+    f1score=f1_score(test_outputs,predictions,average=None)
+    print(f1score)
 
 
 if __name__ == '__main__':
@@ -83,7 +87,7 @@ if __name__ == '__main__':
     run(classifier, "Random forest",train_inputs,train_outputs,test_inputs, test_outputs)
     #-------------Features Importance random forest
     training_data = pd.read_csv('dataset/train_dataset.csv')
-    names = training_data.iloc[:,:-1].columns
+    names = training_data.iloc[:,[0,1,5,6,7,8,12,13,14,15,23,24,25,26,27,28]].columns
     importances =classifier.feature_importances_
     sorted_importances = sorted(importances, reverse=True)
     indices = np.argsort(-importances)
