@@ -12,8 +12,8 @@ import requests
 import urllib
 
 #getting raw urls
-#raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
-raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
+raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
+#raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
 
 
 class FeatureExtract:
@@ -128,6 +128,13 @@ class FeatureExtract:
                     dots = [x.start() for x in re.finditer(r'\.', head.link['href'])]
                     return 1 if url in head.link['href'] or len(dots) == 1 or domain in head.link['href'] else -1
             return 1
+    def https_token(self,url):
+        match = re.search(r"https://|http://", url)
+        if match and match.start() == 0:
+            url = url[match.end():]
+        match = re.search('http|https', url)
+        return -1 if match else 1
+
 
 #prepare features
 ip_address=[]
@@ -139,6 +146,7 @@ sub_domains=[]
 srt_service=[]
 domain_registration_length=[]
 favicon=[]
+https_tkn=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -148,6 +156,7 @@ for i in range(0,nrows):
     url=raw_data["urls"][i]
     print(i),print(url)
     notfound=0
+    cnt=""
     try:
         cnt=urllib.request.urlopen(url).read()
     except:
@@ -162,6 +171,7 @@ for i in range(0,nrows):
     srt_service.append(fe.shortening_service(url))
     #domain_registration_length.append(fe.domain_reg_len(url))
     favicon.append(fe.favicon(url,soup,notfound))
+    https_tkn.append(fe.https_token(url))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -171,6 +181,7 @@ for i in range(0,nrows):
     print(fe.shortening_service(url))
     #print(fe.domain_reg_len(url))
     print(fe.favicon(url,soup,notfound))
+    print(fe.https_token(url))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
