@@ -186,6 +186,33 @@ class FeatureExtract:
                 return 0
             else:
                 return -1
+    def url_anchor(self,url,soup,err):
+        if err:
+            return -1
+        else:
+            i = 0
+            unsafe = 0
+            domain=self.getDomain(url)
+            for a in soup.find_all('a', href=True):
+                # 2nd condition was 'JavaScript ::void(0)' but we put JavaScript because the space between javascript and ::
+                # might not be
+                # there in the actual a['href']
+                if "#" in a['href'] or "javascript" in a['href'].lower() or "mailto" in a['href'].lower() or not (
+                        url in a['href'] or domain in a['href']):
+                    unsafe = unsafe + 1
+                i = i + 1
+                # print a['href']
+            try:
+                percentage = unsafe / float(i) * 100
+            except:
+                return 1
+            if percentage < 31.0:
+                return 1
+                # return percentage
+            elif 31.0 <= percentage < 67.0:
+                return 0
+            else:
+                return -1
 
 
 #prepare features
@@ -201,6 +228,7 @@ favicon=[]
 https_tkn=[]
 port=[]
 req_url=[]
+url_anchor=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -229,6 +257,7 @@ for i in range(0,nrows):
     https_tkn.append(fe.https_token(url))
     port.append(fe.port(url))
     req_url.append(fe.request_url(url,soup,notfound))
+    url_anchor(fe.url_anchor(url,soup,notfound))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -240,8 +269,9 @@ for i in range(0,nrows):
     print(fe.favicon(url,soup,notfound))
     print(fe.https_token(url))
     print(fe.port(url))
-    '''
     print(fe.request_url(url,soup,notfound))
+    '''
+    print(fe.url_anchor(url,soup,notfound))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
