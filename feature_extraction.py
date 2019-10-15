@@ -12,8 +12,8 @@ import requests
 import urllib
 
 #getting raw urls
-raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
-#raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
+#raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
+raw_data=pd.read_csv("raw_urls/legitimate.txt",header=None,names=['urls'])
 
 
 class FeatureExtract:
@@ -134,6 +134,58 @@ class FeatureExtract:
             url = url[match.end():]
         match = re.search('http|https', url)
         return -1 if match else 1
+    def port(self,url):
+        try:
+            domain=self.getDomain(url)
+            port = domain.split(":")[1]
+            if port:
+                return 1
+            else:
+                return -1
+        except:
+            return -1
+    def request_url(self,url,soup,err):
+        if err:
+            return -1
+        else:
+            i = 0
+            success = 0
+            domain=self.getDomain(url)
+            for img in soup.find_all('img', src=True):
+                dots = [x.start() for x in re.finditer(r'\.', img['src'])]
+                if url in img['src'] or domain in img['src'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
+
+            for audio in soup.find_all('audio', src=True):
+                dots = [x.start() for x in re.finditer(r'\.', audio['src'])]
+                if url in audio['src'] or domain in audio['src'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
+
+            for embed in soup.find_all('embed', src=True):
+                dots = [x.start() for x in re.finditer(r'\.', embed['src'])]
+                if url in embed['src'] or domain in embed['src'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
+
+            for i_frame in soup.find_all('i_frame', src=True):
+                dots = [x.start() for x in re.finditer(r'\.', i_frame['src'])]
+                if url in i_frame['src'] or domain in i_frame['src'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
+
+            try:
+                percentage = success / float(i) * 100
+            except:
+                return 1
+
+            if percentage < 22.0:
+                return 1
+            elif 22.0 <= percentage < 61.0:
+                return 0
+            else:
+                return -1
 
 
 #prepare features
@@ -147,6 +199,8 @@ srt_service=[]
 domain_registration_length=[]
 favicon=[]
 https_tkn=[]
+port=[]
+req_url=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -162,6 +216,7 @@ for i in range(0,nrows):
     except:
         notfound=1
     soup=bs4.BeautifulSoup(cnt,'html.parser')
+    '''
     ip_address.append(fe.has_ip_address(url))
     long_url.append(fe.url_length(url))
     have_at_symbol.append(fe.having_at_symbol(url))
@@ -172,6 +227,8 @@ for i in range(0,nrows):
     #domain_registration_length.append(fe.domain_reg_len(url))
     favicon.append(fe.favicon(url,soup,notfound))
     https_tkn.append(fe.https_token(url))
+    port.append(fe.port(url))
+    req_url.append(fe.request_url(url,soup,notfound))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -182,6 +239,9 @@ for i in range(0,nrows):
     #print(fe.domain_reg_len(url))
     print(fe.favicon(url,soup,notfound))
     print(fe.https_token(url))
+    print(fe.port(url))
+    '''
+    print(fe.request_url(url,soup,notfound))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
