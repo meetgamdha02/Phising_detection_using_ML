@@ -213,7 +213,49 @@ class FeatureExtract:
                 return 0
             else:
                 return -1
+    def link_in_tag(self,url,soup,err):
+        if err:
+            return -1
+        else:
+            domain=self.getDomain(url)
+            i = 0
+            success = 0
+            for link in soup.find_all('link', href=True):
+                dots = [x.start() for x in re.finditer(r'\.', link['href'])]
+                if url in link['href'] or domain in link['href'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
 
+            for script in soup.find_all('script', src=True):
+                dots = [x.start() for x in re.finditer(r'\.', script['src'])]
+                if url in script['src'] or domain in script['src'] or len(dots) == 1:
+                    success = success + 1
+                i = i + 1
+            try:
+                percentage = success / float(i) * 100
+            except:
+                return 1
+
+            if percentage < 17.0:
+                return 1
+            elif 17.0 <= percentage < 81.0:
+                return 0
+            else:
+                return -1
+    #server form handler
+    def sfh(self,url,soup,err):
+        if err:
+            return -1
+        else:
+            domain=self.getDomain(url)
+            for form in soup.find_all('form', action=True):
+                if form['action'] == "" or form['action'] == "about:blank":
+                    return -1
+                elif url not in form['action'] and domain not in form['action']:
+                    return 0
+                else:
+                    return 1
+            return 1
 
 #prepare features
 ip_address=[]
@@ -229,6 +271,8 @@ https_tkn=[]
 port=[]
 req_url=[]
 url_anchor=[]
+link_in_tags=[]
+sfh=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -257,7 +301,9 @@ for i in range(0,nrows):
     https_tkn.append(fe.https_token(url))
     port.append(fe.port(url))
     req_url.append(fe.request_url(url,soup,notfound))
-    url_anchor(fe.url_anchor(url,soup,notfound))
+    url_anchor.append(fe.url_anchor(url,soup,notfound))
+    link_in_tags.append(fe.link_in_tags(url,soup,notfound))
+    sfh.append(fe.sfh(url,soup,notfound))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -270,8 +316,10 @@ for i in range(0,nrows):
     print(fe.https_token(url))
     print(fe.port(url))
     print(fe.request_url(url,soup,notfound))
-    '''
     print(fe.url_anchor(url,soup,notfound))
+    print(fe.link_in_tag(url,soup,notfound))
+    '''
+    print(fe.sfh(url,soup,notfound))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
