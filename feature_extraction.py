@@ -256,6 +256,17 @@ class FeatureExtract:
                 else:
                     return 1
             return 1
+    def submit_to_email(self,soup,err):
+        if err:
+            return -2
+        else:
+            for form in soup.find_all('form', action=True):
+                return -1 if "mailto:" in form['action'] else 1
+            return 1
+    def abnormal_url(self,domain,url):
+        hostname = domain.name
+        match = re.search(hostname, url)
+        return 1 if match else -1
 
 #prepare features
 ip_address=[]
@@ -273,6 +284,8 @@ req_url=[]
 url_anchor=[]
 link_in_tags=[]
 sfh=[]
+submitting_to_email=[]
+abnormal_url=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -288,6 +301,12 @@ for i in range(0,nrows):
     except:
         notfound=1
     soup=bs4.BeautifulSoup(cnt,'html.parser')
+    hostname=fe.getDomain(url)
+    dns = 1
+    try:
+        domain = whois.query(hostname)
+    except:
+        dns = -1
     '''
     ip_address.append(fe.has_ip_address(url))
     long_url.append(fe.url_length(url))
@@ -296,7 +315,7 @@ for i in range(0,nrows):
     pre_suf_sep.append(fe.prefix_suffix_sep(url))
     sub_domains.append(fe.sub_domain(url))
     srt_service.append(fe.shortening_service(url))
-    #domain_registration_length.append(fe.domain_reg_len(url))
+    domain_registration_length.append(fe.domain_reg_len(url))
     favicon.append(fe.favicon(url,soup,notfound))
     https_tkn.append(fe.https_token(url))
     port.append(fe.port(url))
@@ -304,6 +323,8 @@ for i in range(0,nrows):
     url_anchor.append(fe.url_anchor(url,soup,notfound))
     link_in_tags.append(fe.link_in_tags(url,soup,notfound))
     sfh.append(fe.sfh(url,soup,notfound))
+    sumitting_to_email.append(fe.submit_to_email(soup,notfound))
+    abnormal_url.append(-1 if dns == -1 else fe.abnormal_url(domain, url))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -318,8 +339,10 @@ for i in range(0,nrows):
     print(fe.request_url(url,soup,notfound))
     print(fe.url_anchor(url,soup,notfound))
     print(fe.link_in_tag(url,soup,notfound))
-    '''
     print(fe.sfh(url,soup,notfound))
+    print(fe.submit_to_email(soup,notfound))
+    '''
+    print(-1 if dns == -1 else fe.abnormal_url(domain, url))
 
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
