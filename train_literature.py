@@ -78,8 +78,8 @@ if __name__ == '__main__':
     run(classifier, "Decision tree",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Random forest classifier (low accuracy)
-    # classifier = RandomForestClassifier()
-    # run(classifier, "Random forest",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = RandomForestClassifier()
+    run(classifier, "Random forest low acc",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom random forest classifier 1
     print ("Best classifier for detecting phishing websites.")
@@ -96,31 +96,33 @@ if __name__ == '__main__':
 
 
     #-------------plotting variable importance
+    '''
     plt.title("Variable Importances")
     plt.barh(np.arange(len(names)), sorted_importances, height = 0.7)
     plt.yticks(np.arange(len(names)), names[indices], fontsize=7)
     plt.xlabel('Relative Importance')
     plt.show()
+    '''
 
     # Linear SVC classifier
-    # classifier = svm.SVC(kernel='linear')
-    # run(classifier, "SVC with linear kernel",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = svm.SVC(kernel='linear')
+    run(classifier, "SVC with linear kernel",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # RBF SVC classifier
-    # classifier = svm.SVC(kernel='rbf')
-    # run(classifier, "SVC with rbf kernel",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = svm.SVC(kernel='rbf')
+    run(classifier, "SVC with rbf kernel",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom SVC classifier 1
-    # classifier = svm.SVC(decision_function_shape='ovo', kernel='linear')
-    # run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = svm.SVC(decision_function_shape='ovo', kernel='linear')
+    run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Custom SVC classifier 2
-    # classifier = svm.SVC(decision_function_shape='ovo', kernel='rbf')
-    # run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = svm.SVC(decision_function_shape='ovo', kernel='rbf')
+    run(classifier, "SVC with ovo shape",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # NuSVC classifier
-    # classifier = svm.NuSVC()
-    # run(classifier, "NuSVC",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = svm.NuSVC()
+    run(classifier, "NuSVC",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # OneClassSVM classifier
     print( "Worst classifier for detecting phishing websites.")
@@ -128,12 +130,12 @@ if __name__ == '__main__':
     run(classifier, "One Class SVM",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # print "K nearest neighbours algorithm."
-    # nbrs = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
-    # run(nbrs, "K nearest neighbours",train_inputs,train_outputs,test_inputs, test_outputs)
+    nbrs = KNeighborsClassifier(n_neighbors=5, algorithm='ball_tree')
+    run(nbrs, "K nearest neighbours",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Gradient boosting classifier
-    # classifier = GradientBoostingClassifier()
-    # run(classifier, "GradientBoostingClassifier",train_inputs,train_outputs,test_inputs, test_outputs)
+    classifier = GradientBoostingClassifier()
+    run(classifier, "GradientBoostingClassifier",train_inputs,train_outputs,test_inputs, test_outputs)
 
     # Take user input and check whether its phishing URL or not.
     if len(sys.argv) > 1:
