@@ -10,6 +10,8 @@ import time
 import bs4
 import requests
 import urllib
+import socket
+import ssl
 
 #getting raw urls
 #raw_data=pd.read_csv("raw_urls/phising.txt",header=None,names=['urls'])
@@ -60,6 +62,29 @@ class FeatureExtract:
             return -1          
         else:
             return 1
+    def ssl_final_state(self,domain,url):
+        PORT = 443
+        sock = socket.socket()
+        sock.connect((domain, PORT))
+        sock = ssl.wrap_socket(sock,
+        # flag that certificate from the other side of connection is required
+        # and should be validated when wrapping 
+        cert_reqs=ssl.CERT_REQUIRED,
+        # file with root certificates
+        ca_certs="cacert.pem"  
+        )
+        # security hole here - there should be an error about mismatched host name
+        # manual check of hostname
+        cert = sock.getpeercert()
+        for field in cert['subject']:
+            if field[0][0] == 'commonName':
+                certhost = field[0][1]
+                if certhost != domain:
+                        #raise ssl.SSLError("Host name '%s' doesn't match certificate host '%s'"
+                         #% (domain, certhost))
+                        return -1
+        return 1
+
     def sub_domain(self,url):
         thr1=3
         thr2=4
@@ -258,7 +283,7 @@ class FeatureExtract:
             return 1
     def submit_to_email(self,soup,err):
         if err:
-            return -2
+            return -1
         else:
             for form in soup.find_all('form', action=True):
                 return -1 if "mailto:" in form['action'] else 1
@@ -267,6 +292,19 @@ class FeatureExtract:
         hostname = domain.name
         match = re.search(hostname, url)
         return 1 if match else -1
+    def i_frame(self,soup,err):
+        if err:
+            return -1
+        else:
+            for i_frame in soup.find_all('i_frame', width=True, height=True, frameBorder=True):
+                # Even if one iFrame satisfies the below conditions, it is safe to return -1 for this method.
+                if i_frame['width'] == "0" and i_frame['height'] == "0" and i_frame['frameBorder'] == "0":
+                    return -1
+                if i_frame['width'] == "0" or i_frame['height'] == "0" or i_frame['frameBorder'] == "0":
+                    return 0
+            # If none of the iframes have a width or height of zero or a frameBorder of size 0, then it is safe to return 1.
+            return 1
+
 
 #prepare features
 ip_address=[]
@@ -275,6 +313,7 @@ have_at_symbol=[]
 redirect=[]
 pre_suf_sep=[]
 sub_domains=[]
+SSL_final_state=[]
 srt_service=[]
 domain_registration_length=[]
 favicon=[]
@@ -286,6 +325,7 @@ link_in_tags=[]
 sfh=[]
 submitting_to_email=[]
 abnormal_url=[]
+i_frame=[]
 
 #Extracting features from url
 fe=FeatureExtract()
@@ -325,6 +365,8 @@ for i in range(0,nrows):
     sfh.append(fe.sfh(url,soup,notfound))
     sumitting_to_email.append(fe.submit_to_email(soup,notfound))
     abnormal_url.append(-1 if dns == -1 else fe.abnormal_url(domain, url))
+    SSL_final_state.append(-1 if dns == -1 else fe.ssl_final_state(domain,url))
+    i_frame.append(fe.i_frame(soup,notfound))
     print(fe.has_ip_address(url))
     print(fe.url_length(url))
     print(fe.having_at_symbol(url))
@@ -332,7 +374,7 @@ for i in range(0,nrows):
     print(fe.prefix_suffix_sep(url))
     print(fe.sub_domain(url))
     print(fe.shortening_service(url))
-    #print(fe.domain_reg_len(url))
+    print(fe.domain_reg_len(url))
     print(fe.favicon(url,soup,notfound))
     print(fe.https_token(url))
     print(fe.port(url))
@@ -341,9 +383,10 @@ for i in range(0,nrows):
     print(fe.link_in_tag(url,soup,notfound))
     print(fe.sfh(url,soup,notfound))
     print(fe.submit_to_email(soup,notfound))
-    '''
     print(-1 if dns == -1 else fe.abnormal_url(domain, url))
-
+    print(-1 if dns == -1 else fe.ssl_final_state(domain,url))
+    '''
+    print(fe.i_frame(soup,notfound))
 #ip_address.append(fe.has_ip_address("http://31.220.111.56/asdq12/"))
 #long_url.append(fe.url_length("http://e.webring.com/hub?sid=&amp;ring=hentff98&amp;id=&amp;list"))
 #print(ip_address)
